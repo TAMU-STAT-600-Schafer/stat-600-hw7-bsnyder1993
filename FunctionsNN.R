@@ -46,7 +46,7 @@ loss_grad_scores <- function(y, scores, K){
   # when predicting class labels using scores versus true y
   # error = ...
   
-  pred <- apply(probs, 1, which.max) - 1
+  pred <- apply(prob_mat, 1, which.max) - 1
   error <- (1 - mean(as.numeric(pred == y))) * 100
   
   # [ToDo] Calculate gradient of loss with respect to scores (output)
@@ -117,10 +117,22 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
 # W2 - a h by K matrix of weights
 # b2 - a vector of size K of intercepts
 evaluate_error <- function(Xval, yval, W1, b1, W2, b2){
+  
   # [ToDo] Forward pass to get scores on validation data
+  
+  H = Xval %*% W1 + matrix(b1, nrow = nrow(Xval), ncol = length(b1), byrow = TRUE)
+  H <- (abs(H) + H) / 2
+    
+  scores = H %*% W2 + matrix(b2, nrow = nrow(Xval), ncol = length(b2), byrow = TRUE)
   
   # [ToDo] Evaluate error rate (in %) when 
   # comparing scores-based predictions with true yval
+  
+  exp_scores <- exp(scores)
+  prob_mat <- exp_scores / rowSums(exp_scores)
+  
+  pred <- apply(prob_mat, 1, which.max) - 1
+  error <- (1 - mean(as.numeric(pred == y))) * 100
   
   return(error)
 }
