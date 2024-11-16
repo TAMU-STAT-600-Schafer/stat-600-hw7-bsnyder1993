@@ -8,8 +8,15 @@
 initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
   # [ToDo] Initialize intercepts as zeros
   
+  b1 = rep(0, hidden_p)
+  b2 = rep(0, K)
+  
   # [ToDo] Initialize weights by drawing them iid from Normal
   # with mean zero and scale as sd
+  
+  set.seed(seed)
+  W1 = scale * matrix(rnorm(p * hidden_p), p, hidden_p)
+  W2 = scale * matrix(rnorm(hidden_p * K), hidden_p, K)
   
   # Return
   return(list(b1 = b1, b2 = b2, W1 = W1, W2 = W2))
@@ -23,16 +30,31 @@ initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
 # K - number of classes
 loss_grad_scores <- function(y, scores, K){
   
+  n <- length(y)
+  
   # [ToDo] Calculate loss when lambda = 0
   # loss = ...
+  
+  exp_scores <- exp(scores)
+  prob_mat <- exp_scores / rowSums(exp_scores)
+  
+  correct_probs <- prob_mat[cbind(1:n, y + 1)]
+  
+  loss <- mean(-log(correct_probs))
   
   # [ToDo] Calculate misclassification error rate (%)
   # when predicting class labels using scores versus true y
   # error = ...
   
+  pred <- apply(probs, 1, which.max) - 1
+  error <- (1 - mean(as.numeric(pred == y))) * 100
+  
   # [ToDo] Calculate gradient of loss with respect to scores (output)
   # when lambda = 0
   # grad = ...
+  
+  grad <- prob_mat
+  grad[cbind(1:n, y + 1)] <- grad[cbind(1:n, y + 1)] - 1
   
   # Return loss, gradient and misclassification error on training (in %)
   return(list(loss = loss, grad = grad, error = error))
