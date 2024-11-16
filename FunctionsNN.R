@@ -89,16 +89,16 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   # [ToDo] Backward pass
   # Get loss, error, gradient at current scores using loss_grad_scores function
   
-  backward <- loss_grad_scores(y, scores, K)
+  out <- loss_grad_scores(y, scores, K)
   
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
   
-  dW2 = crossprod(H, backward$grad) + lambda * W2
-  db2 = colSums(backward$grad)
+  dW2 = crossprod(H, out$grad) + lambda * W2
+  db2 = colSums(out$grad)
   
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   
-  dH = tcrossprod(loss_grad$grad, W2)
+  dH = tcrossprod(out$grad, W2)
   dA1 = (abs(dH) + dH)/2
   dW1 = crossprod(X, dA1) + lambda * W1
   db1 = colSums(dA1)
@@ -161,6 +161,16 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # [ToDo] Initialize b1, b2, W1, W2 using initialize_bw with seed as seed,
   # and determine any necessary inputs from supplied ones
   
+  p = ncol(X)
+  K <- length(unique(y))
+  
+  init <- initialize_bw(p, hidden_p, K, scale = scale, seed = seed)
+  
+  b1 <- init$b1
+  b2 <- init$b2
+  W1 <- init$W1
+  W2 <- init$W2
+  
   # Initialize storage for error to monitor convergence
   error = rep(NA, nEpoch)
   error_val = rep(NA, nEpoch)
@@ -169,15 +179,36 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   set.seed(seed)
   # Start iterations
   for (i in 1:nEpoch){
-    # Allocate bathes
+    
+    # Allocate batches
     batchids = sample(rep(1:nBatch, length.out = n), size = n)
+    cur_error = 0
+    
     # [ToDo] For each batch
     #  - do one_pass to determine current error and gradients
     #  - perform SGD step to update the weights and intercepts
+   
+    for(j in 1:nBatch){
+      
+      pass = one_pass(X[batchids == j, ], y[batchids == j], K, W1, b1, W2, b2)
+      
+      # Keep track of error
+      cur_error = cur_error + pass$error
+      
+      # [ToDo] Make an update of W1, b1, W2, b2
+      W1 <- W1 - rate * pass$grads$dW1
+      b1 <- b1 - rate * pass$grads$db1
+      W2 <- W2 - rate * pass$grads$dW2
+      b2 <- b2 - rate * pass$grads$db2
+    }
     
     # [ToDo] In the end of epoch, evaluate
     # - average training error across batches
     # - validation error using evaluate_error function
+    
+    error[i] <- cur_error/nBatch
+    error_val[i] <- evaluate_error(Xval, yval, W1, b1, W2, b2)
+    
   }
   # Return end result
   return(list(error = error, error_val = error_val, params =  list(W1 = W1, b1 = b1, W2 = W2, b2 = b2)))
