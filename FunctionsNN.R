@@ -132,7 +132,7 @@ evaluate_error <- function(Xval, yval, W1, b1, W2, b2){
   prob_mat <- exp_scores / rowSums(exp_scores)
   
   pred <- apply(prob_mat, 1, which.max) - 1
-  error <- (1 - mean(as.numeric(pred == y))) * 100
+  error <- (1 - mean(as.numeric(pred == yval))) * 100
   
   return(error)
 }
