@@ -46,7 +46,10 @@ loss_grad_scores <- function(y, scores, K){
   # when predicting class labels using scores versus true y
   # error = ...
   
-  pred <- max.col(prob_mat)-1
+  pred <- apply(prob_mat, 1, which.max) - 1
+  #pred <- max.col(prob_mat)-1
+  #print(pred)
+  #print(y)
   error <- (1 - mean(as.numeric(pred == y))) * 100
 
   # [ToDo] Calculate gradient of loss with respect to scores (output)
@@ -178,8 +181,8 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # Set seed for reproducibility
   set.seed(seed)
   # Start iterations
-  #for (i in 1:nEpoch){
-  for (i in 1:1){  
+  for (i in 1:nEpoch){
+  #for (i in 1:1){  
     # Allocate batches
     batchids = sample(rep(1:nBatch, length.out = n), size = n)
     cur_error = 0
@@ -188,8 +191,8 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
     #  - do one_pass to determine current error and gradients
     #  - perform SGD step to update the weights and intercepts
    
-    #for(j in 1:nBatch){
-    for(j in 1:1){
+    for(j in 1:nBatch){
+    #for(j in 1:1){
       
       pass = one_pass(X[batchids == j, ], y[batchids == j], K, W1, b1, W2, b2, lambda)
       
