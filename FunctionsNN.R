@@ -37,18 +37,18 @@ loss_grad_scores <- function(y, scores, K){
   
   exp_scores <- exp(scores)
   prob_mat <- exp_scores / rowSums(exp_scores)
-  
+
   correct_probs <- prob_mat[cbind(1:n, y + 1)]
-  
+
   loss <- mean(-log(correct_probs))
   
   # [ToDo] Calculate misclassification error rate (%)
   # when predicting class labels using scores versus true y
   # error = ...
   
-  pred <- apply(prob_mat, 1, which.max) - 1
+  pred <- max.col(prob_mat)-1
   error <- (1 - mean(as.numeric(pred == y))) * 100
-  
+
   # [ToDo] Calculate gradient of loss with respect to scores (output)
   # when lambda = 0
   # grad = ...
@@ -178,8 +178,8 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # Set seed for reproducibility
   set.seed(seed)
   # Start iterations
-  for (i in 1:nEpoch){
-    
+  #for (i in 1:nEpoch){
+  for (i in 1:1){  
     # Allocate batches
     batchids = sample(rep(1:nBatch, length.out = n), size = n)
     cur_error = 0
@@ -188,14 +188,21 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
     #  - do one_pass to determine current error and gradients
     #  - perform SGD step to update the weights and intercepts
    
-    for(j in 1:nBatch){
+    #for(j in 1:nBatch){
+    for(j in 1:1){
       
-      pass = one_pass(X[batchids == j, ], y[batchids == j], K, W1, b1, W2, b2)
+      pass = one_pass(X[batchids == j, ], y[batchids == j], K, W1, b1, W2, b2, lambda)
       
       # Keep track of error
       cur_error = cur_error + pass$error
       
       # [ToDo] Make an update of W1, b1, W2, b2
+      if(i == 20 & j == 5){
+        print(length(b2))
+        print(length(b1))
+        print(length(pass$grads$db2))
+        print(length(pass$grads$db1))
+      }
       W1 <- W1 - rate * pass$grads$dW1
       b1 <- b1 - rate * pass$grads$db1
       W2 <- W2 - rate * pass$grads$dW2
