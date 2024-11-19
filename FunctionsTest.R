@@ -54,9 +54,10 @@ loss_grad_scores <- function(y, scores, K){
   # when lambda = 0
   # grad = ...
   
-  grad <- prob_mat
-  grad[cbind(1:n, y + 1)] <- grad[cbind(1:n, y + 1)] - 1
+  grad <- matrix(0, nrow = nrow(prob_mat), ncol = ncol(prob_mat))
+  grad[cbind(1:n, y + 1)] <- prob_mat[cbind(1:n, y + 1)] - 1
   grad <- grad / n
+
   # Return loss, gradient and misclassification error on training (in %)
   return(list(loss = loss, grad = grad, error = error))
 }
@@ -77,11 +78,11 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   # [To Do] Forward pass
   # From input to hidden 
   
-  A = X %*% W1 + matrix(b1, n, length(b1), byrow = TRUE)
+  H = X %*% W1 + matrix(b1, n, length(b1), byrow = TRUE)
   
   # ReLU
   
-  H <- (abs(A) + A)/2
+  H <- (abs(H) + H)/2
   
   # From hidden to output scores
   
@@ -100,7 +101,7 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   
   dH <- tcrossprod(out$grad, W2)
-  dH <- dH * as.numeric(A > 0)
+  dH[H <= 0] <- 0
   dW1 <- crossprod(X, dH) + lambda * W1
   db1 <- colSums(dH)
   
@@ -213,3 +214,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # Return end result
   return(list(error = error, error_val = error_val, params =  list(W1 = W1, b1 = b1, W2 = W2, b2 = b2)))
 }
+
+grad <- matrix(0, nrow = nrow(prob_mat), ncol = ncol(prob_mat))
+grad[cbind(1:n, y + 1)] <- grad[cbind(1:n, y + 1)] - 1
+grad <- grad / n
