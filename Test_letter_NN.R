@@ -18,7 +18,7 @@ Yt <- letter_test[, 1]
 Xt <- as.matrix(letter_test[, -1])
 
 # Source the NN function
-source("FunctionsNN.R")
+source("FunctionsTest.R")
 
 # [ToDo] Source the functions from HW3 (replace FunctionsLR.R with your working code)
 source("FunctionsLR.R")
@@ -36,7 +36,7 @@ plot(out$error_test, type = 'o') # around 25 if keep training
 
 
 # Apply neural network training with default given parameters
-out2 = NN_train(Xtrain, Ytrain, Xval, Yval, lambda = 0.1,
+out2 = NN_train(Xtrain, Ytrain, Xval, Yval, lambda = 0.001,
                 rate = 0.1, mbatch = 50, nEpoch = 150,
                 hidden_p = 100, scale = 1e-3, seed = 12345)
 plot(1:length(out2$error), out2$error, ylim = c(0, 100))
