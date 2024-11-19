@@ -40,7 +40,7 @@ loss_grad_scores <- function(y, scores, K){
 
   correct_probs <- prob_mat[cbind(1:n, y + 1)]
 
-  loss <- mean(-log(correct_probs))
+  loss <- -sum(log(correct_probs))/n
   
   # [ToDo] Calculate misclassification error rate (%)
   # when predicting class labels using scores versus true y
@@ -56,6 +56,7 @@ loss_grad_scores <- function(y, scores, K){
   
   grad <- prob_mat
   grad[cbind(1:n, y + 1)] <- grad[cbind(1:n, y + 1)] - 1
+  grad <- grad / n
   # Return loss, gradient and misclassification error on training (in %)
   return(list(loss = loss, grad = grad, error = error))
 }
@@ -76,7 +77,7 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   # [To Do] Forward pass
   # From input to hidden 
   
-  H = X %*% W1 + matrix(b1, n, length(b1), byrow = T)
+  H = X %*% W1 + matrix(b1, n, length(b1), byrow = TRUE)
   
   # ReLU
   
@@ -84,7 +85,7 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   
   # From hidden to output scores
   
-  scores = H %*% W2 + matrix(b2, n, length(b2), byrow = T)
+  scores = H %*% W2 + matrix(b2, n, length(b2), byrow = TRUE)
   
   # [ToDo] Backward pass
   # Get loss, error, gradient at current scores using loss_grad_scores function
@@ -93,15 +94,15 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
   
-  dW2 = crossprod(H, out$grad) + lambda * W2
-  db2 = colSums(out$grad)
+  dW2 <- crossprod(H, out$grad) + lambda * W2
+  db2 <- colSums(out$grad)
   
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   
-  dH = tcrossprod(out$grad, W2)
-  dA1 = (abs(dH) + dH)/2
-  dW1 = crossprod(X, dA1) + lambda * W1
-  db1 = colSums(dA1)
+  dH <- tcrossprod(out$grad, W2)
+  dH[H <= 0] <- 0
+  dW1 <- crossprod(X, dH) + lambda * W1
+  db1 <- colSums(dH)
   
   # Return output (loss and error from forward pass,
   # list of gradients from backward pass)
