@@ -8,6 +8,7 @@
 initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
   # [ToDo] Initialize intercepts as zeros
   
+  # Zero vectors of length hidden_p and K, respectively
   b1 = rep(0, hidden_p)
   b2 = rep(0, K)
   
@@ -35,25 +36,33 @@ loss_grad_scores <- function(y, scores, K){
   # [ToDo] Calculate loss when lambda = 0
   # loss = ...
   
+  # Calculate probability matrix
   exp_scores <- exp(scores)
   prob_mat <- exp_scores / rowSums(exp_scores)
-
+  
+  # Determine the calculated probabilities that correspond to the correct y values
   correct_probs <- prob_mat[cbind(1:n, y + 1)]
-
+  
+  # Calculate loss, which is the mean of the -log of each element in the probability matrix
+  # corresponding to the correct y value.
   loss <- -sum(log(correct_probs))/n
   
   # [ToDo] Calculate misclassification error rate (%)
   # when predicting class labels using scores versus true y
   # error = ...
   
+  # Calculate predictions based on probablility matrix
   pred <- apply(prob_mat, 1, which.max) - 1
-
+  
+  # Calculate error (1 - mean of correct guesses) * 100
   error <- (1 - mean(as.numeric(pred == y))) * 100
 
   # [ToDo] Calculate gradient of loss with respect to scores (output)
   # when lambda = 0
   # grad = ...
   
+  # Calculate gradient by subtracting 1 from each index in the probability matrix
+  # corresponding to the correct y value, and dividing all entries by n.
   grad <- prob_mat
   grad[cbind(1:n, y + 1)] <- grad[cbind(1:n, y + 1)] - 1
   grad <- grad / n
@@ -94,14 +103,15 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
   
-  dW2 <- crossprod(H, out$grad) + lambda * W2
+  dW2 <- crossprod(H, out$grad) + lambda * W2   # Add lambda
   db2 <- colSums(out$grad)
   
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   
+  # Calculate derivatives as shown in class.
   dH <- tcrossprod(out$grad, W2)
-  dH[H <= 0] <- 0
-  dW1 <- crossprod(X, dH) + lambda * W1
+  dH[H <= 0] <- 0                         # relu
+  dW1 <- crossprod(X, dH) + lambda * W1   # Add lambda
   db1 <- colSums(dH)
   
   # Return output (loss and error from forward pass,
@@ -121,17 +131,21 @@ evaluate_error <- function(Xval, yval, W1, b1, W2, b2){
   
   # [ToDo] Forward pass to get scores on validation data
   
+  # Calculate forward pass on H and relu
   H = Xval %*% W1 + matrix(b1, nrow = nrow(Xval), ncol = length(b1), byrow = TRUE)
   H <- (abs(H) + H) / 2
     
+  # Calculate scores
   scores = H %*% W2 + matrix(b2, nrow = nrow(Xval), ncol = length(b2), byrow = TRUE)
   
   # [ToDo] Evaluate error rate (in %) when 
   # comparing scores-based predictions with true yval
   
+  # Initialize probability matrix
   exp_scores <- exp(scores)
   prob_mat <- exp_scores / rowSums(exp_scores)
   
+  # Create prediction vector and calculate error
   pred <- apply(prob_mat, 1, which.max) - 1
   error <- (1 - mean(as.numeric(pred == yval))) * 100
   
@@ -173,6 +187,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   W2 <- init$W2
   
   # Initialize storage for error to monitor convergence
+  
   error = rep(NA, nEpoch)
   error_val = rep(NA, nEpoch)
   
@@ -190,6 +205,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
    
     for(j in 1:nBatch){
       
+      # Run the pass on the batch
       pass = one_pass(X[batchids == j, ], y[batchids == j], K, W1, b1, W2, b2, lambda)
       
       # Keep track of error
